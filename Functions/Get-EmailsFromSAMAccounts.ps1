@@ -16,7 +16,7 @@ function Get-EmailsfromSAMAccounts {
         Specify a text file source from where to pull the SAM-Account-Name attributes.
 
     .EXAMPLE
-        Get-EmailsfromSAMAccounts -UserListPath C:\Temp\AD_account_list.txt
+        Get-EmailsfromSAMAccounts -UserListPath C:\Temp\AD_account_list.txt -AppName GRLWEAP
     .LINK
         https://github.com/anthonyarmijo/PowerShell
     #>
