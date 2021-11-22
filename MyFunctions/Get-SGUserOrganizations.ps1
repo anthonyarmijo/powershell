@@ -15,7 +15,10 @@ function Get-SGUserOrganizations {
         1.0 2021/11/11 Initial Version
 
     .PARAMETER ADSecurityGroup
-        Specify an AD Security Group source to generate the required list of users and their respective organizations.
+        Specify an AD Security Group source to be used to generate the user/organization output.
+
+    .PARAMETER UserListPath
+        Specify a source path (.txt) for a list of SAM-Account-Names to be used to generate the user/organization output.
 
     .EXAMPLE
         Get-SGUserOrganizations -ADSecurityGroup 'SKM-Users'
@@ -39,7 +42,6 @@ function Get-SGUserOrganizations {
             $ExportPath = "C:\GIT\PowerShell\Input-Output\$CurrentDate.csv"
         }
 
-
     Process{
         
         if ($ADSecurityGroup) {
@@ -51,7 +53,7 @@ function Get-SGUserOrganizations {
                     Where-Object {$_.extensionAttribute6 -cnotlike "*SS|A|ITS*"} | 
                     Where-Object {$_.extensionAttribute6 -ne $null} | 
 
-                    ### Above criteria removes any IT staff, and disabled users
+                    ### Above criteria removes IT staff and disabled users.
 
                 Select-Object Name, UserPrincipalName, ExtensionAttribute6, Enabled |
 
@@ -68,7 +70,7 @@ function Get-SGUserOrganizations {
                 Where-Object {$_.extensionAttribute6 -cnotlike "*SS|A|ITS*"} | 
                 Where-Object {$_.extensionAttribute6 -ne $null} | 
 
-                ### Above criteria removes any IT staff, and disabled users
+                    ### Above criteria removes IT staff and disabled users.
 
             Select-Object Name, UserPrincipalName, ExtensionAttribute6, Enabled |
             Export-Csv -Path $ExportPath -NoTypeInformation -Append -Force
