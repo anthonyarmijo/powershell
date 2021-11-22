@@ -2,7 +2,7 @@ function Get-SGUserOrganizations {
     [CmdletBinding()]
     <#
     .SYNOPSIS
-       This function allows you to export a list of users from an AD security group, along with their specific organization (ExtensionAttribute6).
+       This function allows you to export a list of users from an AD security group or a custom list, into an along with their specific organization (ExtensionAttribute6).
        This is especially useful for procurement tracking purposes, utilizing existing EXP Citrix AD access groups.
  
        Any IT user accounts in the security groups will be automatically removed for the CSV export, in order to better facilitate procurement tracking.
@@ -26,27 +26,55 @@ function Get-SGUserOrganizations {
     param (
             [Parameter()]
             [String]
-            $ADSecurityGroup = '.*'
+            $ADSecurityGroup = '',
 
+            [Parameter()]
+            [String]
+            $UserListPath = ''
         )
+        
+    Begin{
+
+            $CurrentDate = Get-Date -Format "yyyy-MM-dd T HH.mm.ss"
+            $ExportPath = "C:\GIT\PowerShell\Input-Output\$CurrentDate.csv"
+        }
+
 
     Process{
-        $AD_SecurityGroup = 'SKM-Users'
-        #Set the specific AD group above.
         
-        $Users= (Get-ADGroupMember -Identity $AD_SecurityGroup | Select-Object -ExpandProperty SamAccountName)
+        if ($ADSecurityGroup) {
+    
+        $Users= (Get-ADGroupMember -Identity $ADSecurityGroup | Select-Object -ExpandProperty SamAccountName)
+            $Users | ForEach-Object -Process {
+                Get-ADUser -Identity $_ -Properties Name, ExtensionAttribute6, Enabled, UserPrincipalName | 
+                    Where-Object {$_.Enabled -like "True"} |
+                    Where-Object {$_.extensionAttribute6 -cnotlike "*SS|A|ITS*"} | 
+                    Where-Object {$_.extensionAttribute6 -ne $null} | 
 
-        $Users | ForEach-Object -Process {
-            Get-ADUser -Identity $_ -Properties Name, ExtensionAttribute6, Enabled, UserPrincipalName | 
+                    ### Above criteria removes any IT staff, and disabled users
+
+                Select-Object Name, UserPrincipalName, ExtensionAttribute6, Enabled |
+
+                Export-Csv -Path $ExportPath -NoTypeInformation -Append -Force
+            } #BREAK LOOP
+        }
+        
+        if ($UserListPath) {
+
+            Get-Content -Path $UserListPath | 
+            ForEach-Object -Process {
+                Get-ADUser -Identity $_ -Properties Name, ExtensionAttribute6, Enabled, UserPrincipalName | 
                 Where-Object {$_.Enabled -like "True"} |
-                Where-Object {$_.extensionAttribute6 -cnotmatch "SS|A|ITS"} | 
+                Where-Object {$_.extensionAttribute6 -cnotlike "*SS|A|ITS*"} | 
                 Where-Object {$_.extensionAttribute6 -ne $null} | 
-        
-            Select-Object Name, UserPrincipalName, ExtensionAttribute6, Enabled |
-            Export-Csv -Path .\output.csv -NoTypeInformation -Append -Force }
-        
-            Invoke-Item -Path .\output.csv
 
+                ### Above criteria removes any IT staff, and disabled users
+
+            Select-Object Name, UserPrincipalName, ExtensionAttribute6, Enabled |
+            Export-Csv -Path $ExportPath -NoTypeInformation -Append -Force
+            }
+        } #BREAK LOOP
+        Invoke-Item -Path $ExportPath
     }
 
-}
+    }

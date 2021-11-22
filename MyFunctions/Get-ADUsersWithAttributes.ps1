@@ -1,7 +1,30 @@
 function Get-ADUsersWithAttributes {
+        <#
+    .SYNOPSIS
+        This function...
+ 
+    .NOTES
+        Anthony Armijo
+        Anthony.Armijo@icloud.com
+ 
+        VERSION HISTORY
+        1.0 2021/09/01 Initial Version
+        1.01 2021/11/11 Added help text + export-csv functionality.
+
+    .PARAMETER UserListPath
+        Specifies...
+
+    .EXAMPLE
+        Get-ADUsersWithAttributes -ExtensionAttribute10 'Admin' -ExtensionAttribute11 'IT Services' -Division 'Shared Services'
+    .LINK
+        https://github.com/anthonyarmijo/PowerShell
+    #>
+    
     [CmdletBinding()]
     param (
-        
+
+        $tempPath = "$env:temp\report_$(Get-Date -Format yyyyMMddTHHmmssffff).csv",
+
         [Parameter()]
         [String[]] #adding the [] tells PS that you can accept 1 or more values
         $ExtensionAttribute10 = '.*',
@@ -45,11 +68,10 @@ $AllUsers | Where-Object {
     ($_.division -Match $Division)                         -and
     ($_.title -Match $Title) } | 
     
-    Select-Object Name, ExtensionAttribute10, ExtensionAttribute11, ExtensionAttribute13, Division, Title, whenCreated| 
-    Sort-Object -Descending -Property whenCreated, ExtensionAttribute10, ExtensionAttribute11, ExtensionAttribute13 ####|
-    ####Export-CSV -Path C:\Temp\output.csv -NoTypeInformation
-
-
+    Select-Object Name, ExtensionAttribute10, ExtensionAttribute11, ExtensionAttribute13, Division, Title | 
+    Sort-Object -Descending -Property ExtensionAttribute10, ExtensionAttribute11, ExtensionAttribute13 |
+    Export-CSV -Path $tempPath -NoTypeInformation
+    Invoke-Item -Path $tempPath
 
     }
     

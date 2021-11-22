@@ -1,1 +1,0 @@
-Get-ADDirectReports -Identity SmithRN -Recurse | Select Division, Name, extensionAttribute13, extensionAttribute10, extensionattribute11 | Export-CSV -Path SmithRN.csv -NoTypeInformation -Force
